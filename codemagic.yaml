@@ -1,5 +1,64 @@
 workflows:
-    sample-workflow:
-        name: Codemagic Sample Workflow
-        max_build_duration: 120
-        instance_type: mac_mini_m1
+  react-native-android:
+    name: React Native Android
+    max_build_duration: 120
+    instance_type: mac_mini_m1
+    environment:
+      android_signing:
+        - keystore_reference
+      groups:
+        - google_credentials # <-- (Includes GCLOUD_SERVICE_ACCOUNT_CREDENTIALS <-- Put your google-services.json)
+      vars:
+        PACKAGE_NAME: "com.anonymous.AwesomeProject"
+    scripts:
+      - name: Install npm dependencies
+        script: |
+          npm install
+      - name: Set Android SDK location
+        script: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
+      - name: Build Android release
+        script: |
+          LATEST_GOOGLE_PLAY_BUILD_NUMBER=$(google-play get-latest-build-number --package-name "$PACKAGE_NAME")
+          if [ -z LATEST_BUILD_NUMBER ]; then
+            # fallback in case no build number was found from google play. Alternatively, you can `exit 1` to fail the build
+            UPDATED_BUILD_NUMBER=$BUILD_NUMBER
+          else
+            UPDATED_BUILD_NUMBER=$(($LATEST_GOOGLE_PLAY_BUILD_NUMBER + 1))
+          fi
+          cd android
+          ./gradlew bundleRelease \
+            -PversionCode=$UPDATED_BUILD_NUMBER \
+            -PversionName=1.0.$UPDATED_BUILD_NUMBER
+    artifacts:
+      - app/build/outputs/**/*.aab
+    publishing:
+      email:
+        recipients:
+          - aris.suryono.dev@gmail.com
+        notify:
+          success: true # To not receive a notification when a build succeeds
+          failure: false # To not receive a notification when a build fails
+      google_play:
+        # Contents of the JSON key file for Google Play service account saved
+        # as a secure environment variable
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+
+        # Name of the track internal, alpha, beta, production, internal app sharing,
+        # or your custom track name
+        track: alpha
+
+        # Optional Priority of the release (only set if in-app updates are supported)
+        # integer in range [0, 5]
+        in_app_update_priority: 3
+
+        # Optional. Rollout fraction (set only if releasing to a fraction of users)
+        # value between (0, 1)
+        rollout_fraction: 0.25
+
+        # Optional boolean To be used ONLY if your app cannot be sent for review automatically *
+        changes_not_sent_for_review: true
+
+        # Optional boolean. Publish artifacts under a draft release.
+        # Can not be used together with rollout_fraction. Defaults to false
+        submit_as_draft: true
