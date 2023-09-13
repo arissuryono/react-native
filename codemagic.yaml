@@ -31,6 +31,8 @@ workflows:
           ./gradlew bundleRelease \
             -PversionCode=$UPDATED_BUILD_NUMBER \
             -PversionName=1.0.$UPDATED_BUILD_NUMBER
+          ls -lah app/build
+          ls -lah app/build/outputs
     artifacts:
       - app/build/outputs/**/*.aab
     publishing:
