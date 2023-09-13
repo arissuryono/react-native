@@ -40,7 +40,7 @@ workflows:
           echo app/build/outputs/bundle/release
           ls -lah app/build/outputs/bundle/release
     artifacts:
-      - app/build/outputs/**/*.aab
+      - android/app/build/outputs/**/*.aab
     publishing:
       email:
         recipients:
