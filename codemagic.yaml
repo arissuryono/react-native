@@ -37,6 +37,8 @@ workflows:
           ls -lah app/build/outputs
           echo app/build/outputs/bundle
           ls -lah app/build/outputs/bundle
+          echo app/build/outputs/bundle/release
+          ls -lah app/build/outputs/bundle/release
     artifacts:
       - app/build/outputs/**/*.aab
     publishing:
